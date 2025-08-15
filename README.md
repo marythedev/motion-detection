@@ -43,3 +43,9 @@ The system consists of several modular components:
 
 5. Main Controller (main.py)
 - Manages the process: read args → process frames → detect motion → track viewport → visualize results.
+
+## Challenges
+- Creating the "smoothness" for the movement of the viewport and boundaries.
+
+## Future Improvements
+- As a possible feature, track people and the ball separately.
