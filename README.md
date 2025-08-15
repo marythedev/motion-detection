@@ -7,7 +7,7 @@ This project implements a motion detection system with a moving viewport that fo
 How to Run
 
 ### 1. Install Dependencies
-pip install -r requirements.txt
+pip install -r requirement.txt
 
 ### 2. Run the Script
 python src/main.py --video path/to/video.mp4 [--output path/to/output.mp4] [--fps 5] [--viewport_size WIDTHxHEIGHT]

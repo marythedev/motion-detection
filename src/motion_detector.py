@@ -58,6 +58,4 @@ def detect_motion(frames, frame_idx, threshold=25, min_area=100):
             x, y, w, h = cv2.boundingRect(contour)
             motion_boxes.append((x, y, w, h))
 
-    # Your implementation here
-
     return motion_boxes
