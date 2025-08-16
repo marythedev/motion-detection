@@ -98,19 +98,6 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
         viewport_video_path, fourcc, 5, (vp_width, vp_height)
     )
 
-    # TODO: Implement visualization
-    # 1. Process each frame
-    #    a. Create a copy of the frame for visualization
-    #    b. Draw bounding boxes around motion regions
-    #       (hint: cv2.rectangle with green color (0, 255, 0))
-    #    c. Draw the viewport rectangle
-    #       (hint: cv2.rectangle with blue color (255, 0, 0))
-    #    d. Extract the viewport content (the area inside the viewport)
-    #    e. Add frame number to the visualization (hint: cv2.putText)
-    #    f. Save visualization frames and viewport frames as images
-    #    g. Write frames to both video writers
-    # 2. Release the video writers when done
-
     ball_trajectory = []
 
     for i, frame in enumerate(frames):
@@ -136,7 +123,7 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
                 best_ball = (x, y, w, h)
                 best_center = (x + w // 2, y + h // 2)
             
-            # ball labling
+            # ball labeling
             if best_ball and best_conf > 0.7:
                 x, y, w, h = best_ball
                 cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 255), 2)
@@ -145,11 +132,11 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
                 if best_center:
                     ball_trajectory.append(best_center)
             else:
-                # player labling
+                # player labeling
                 cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv2.putText(annotated, f"{label}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-            # ball tajectory visualization based on current and last appearance
+            # ball trajectory visualization based on current and last appearance
             for j in range(1, len(ball_trajectory)):
                 pt1 = ball_trajectory[j - 1]
                 pt2 = ball_trajectory[j]
