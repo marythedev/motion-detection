@@ -55,7 +55,7 @@ The system consists of several modular components:
 - Creating the "smoothness" for the movement of the viewport and boundaries.
 
 ## Future Improvements
-- As a possible feature, track people and the ball separately.
+- As a possible feature, track people separately. In professional soccer matches, there is images of each player. If model is trained on those, it will be also able to identify where each player in team is. 
 
 ## Work division
 Jimmy
