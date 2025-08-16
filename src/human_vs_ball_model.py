@@ -9,7 +9,6 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 CLASSES = ['human', 'ball']  # 0 for human, 1 for ball
 
-
 # PREPROCESSING
 def load_images_from_folder(folder, label):
     images = []
@@ -63,10 +62,6 @@ x_test = x_test / 255.0
 y_train_one_hot = keras.utils.to_categorical(y_train, num_classes=2)
 y_test_one_hot = keras.utils.to_categorical(y_test, num_classes=2)
 
-
-
-
-# MODEL
 # Model
 model = Sequential([
     # layer 1
@@ -117,10 +112,6 @@ aug = keras.preprocessing.image.ImageDataGenerator(
 # train
 history = model.fit(aug.flow(x_train, y_train_one_hot), validation_data=(x_test, y_test_one_hot), batch_size=64, epochs=100)
 
-
-
-
-
 # EVALUATION
 # accuracy and loss diagrams for train and validation
 plt.plot(history.history['accuracy'], label='train accuracy')
@@ -150,10 +141,6 @@ plt.figure(figsize=(12, 10))
 display.plot(cmap='Blues', xticks_rotation=45)
 plt.title('Confusion matrix')
 plt.show()
-
-
-
-
 
 # SAVING THE MODEL
 model.save('human_vs_ball_model.h5')

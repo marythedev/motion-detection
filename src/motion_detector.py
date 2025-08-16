@@ -33,21 +33,21 @@ def detect_motion(frames, frame_idx, threshold=25, min_area=100):
     gray_current = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
     gray_prev = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
     
-    # 2. Apply Gaussian blur to reduce noise (hint: cv2.GaussianBlur)
+    # 2. Apply Gaussian blur to reduce noise 
     blurred_current = cv2.GaussianBlur(gray_current, (5, 5), 0)
     blurred_prev = cv2.GaussianBlur(gray_prev, (5, 5), 0)
     
-    # 3. Calculate absolute difference between frames (hint: cv2.absdiff)
+    # 3. Calculate absolute difference between frames 
     diff = cv2.absdiff(blurred_current, blurred_prev)
     
-    # 4. Apply threshold to highlight differences (hint: cv2.threshold)
+    # 4. Apply threshold to highlight differences 
     _, thresh = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)
     
-    # 5. Dilate the thresholded image to fill in holes (hint: cv2.dilate)
+    # 5. Dilate the thresholded image to fill in holes 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     dilated = cv2.dilate(thresh, kernel, iterations=2)
     
-    # 6. Find contours in the thresholded image (hint: cv2.findContours)
+    # 6. Find contours in the thresholded image 
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     # 7. Filter contours by area and extract bounding boxes
