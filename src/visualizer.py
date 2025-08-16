@@ -14,8 +14,11 @@ model = load_model(model_path)
 
 CLASS_NAMES = 'human', 'ball'
 
-# resising the roi to send to the model while keeping the proportions
 def resize_with_padding(image, target_size=128):
+    """
+    resising the roi to send to the model while keeping the proportions
+    
+    """
     h, w = image.shape[:2]
     aspect = w / h
 
@@ -28,7 +31,6 @@ def resize_with_padding(image, target_size=128):
 
     resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
 
-    # Создаём чёрный холст
     padded = np.zeros((target_size, target_size, 3), dtype=np.uint8)
     x = (target_size - new_w) // 2
     y = (target_size - new_h) // 2
@@ -37,19 +39,24 @@ def resize_with_padding(image, target_size=128):
     return padded
 
 
-# classifies roi as human or ball (returns the label and confidence)
 def predict_object(roi):
+    """
+    classifies roi as human or ball (returns the label and confidence)
+    
+    takes: motion detected ROI
+    
+    """
     
     if roi.size == 0:
         return 'unknown', 0.0
 
-    # Подготовка изображения
-    img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
-    img = resize_with_padding(img, 128)
-    img = img.astype('float32') / 255.0
-    img = np.expand_dims(img, axis=0)  # (1, 128, 128, 3)
+    # preprocessing
+    img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)      # turning roi into rgb
+    img = resize_with_padding(img, 128)             # resizing
+    img = img / 255.0                               # normalizing
+    img = np.expand_dims(img, axis=0)               # preparing a batch
 
-    # Предсказание
+    # getting prediction
     pred = model.predict(img, verbose=0)
     class_idx = np.argmax(pred)
     label = CLASS_NAMES[class_idx]
@@ -104,8 +111,6 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
     #    g. Write frames to both video writers
     # 2. Release the video writers when done
 
-    pl = 0
-    bl = 0
     ball_trajectory = []
 
     for i, frame in enumerate(frames):
@@ -118,7 +123,7 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
         for (x, y, w, h) in motion_results[i]:
             
             roi = frame[y:y+h, x:x+w]
-            if w < 20 or h < 20 or roi.size == 0:
+            if w < 15 or h < 15 or roi.size == 0:
                 continue
             
             # drawing the box and labeling roi
@@ -126,23 +131,16 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
             if (label == 'human'):
                 label = 'player'
             
-
-            
             if label == 'ball' and confidence > best_conf:
                 best_conf = confidence
                 best_ball = (x, y, w, h)
                 best_center = (x + w // 2, y + h // 2)
             
             # ball labling
-            if best_ball and best_conf > 0.5:
+            if best_ball and best_conf > 0.7:
                 x, y, w, h = best_ball
-                cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                cv2.putText(annotated, f"ball {best_conf:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-                os.makedirs("ballpreds", exist_ok=True)
-                filename = os.path.join("ballpreds", f"ball_{pl:04d}_{pl:03d}.jpg")
-                pl += 1
-                cv2.imwrite(filename, frame[y:y+h, x:x+w])
+                cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 255), 2)
+                cv2.putText(annotated, f"ball", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
                 if best_center:
                     ball_trajectory.append(best_center)
@@ -157,22 +155,6 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
                 pt2 = ball_trajectory[j]
                 if pt1 and pt2:
                     cv2.line(annotated, pt1, pt2, (0, 0, 255), 2)
-
-            # FOR DEBUG
-            os.makedirs("ballpreds", exist_ok=True)
-            os.makedirs("playerpreds", exist_ok=True)
-            
-            # saving ball predictions
-            if label == 'ball' and confidence > 0.5:
-                filename = os.path.join("ballpreds", f"ball_{pl:04d}_{pl:03d}.jpg")
-                pl = pl+1
-                success = cv2.imwrite(filename, roi)
-
-            # saving human predictions
-            if label == 'player' and confidence > 0.5:
-                filename = os.path.join("playerpreds", f"human_{bl:04d}_{bl:03d}.jpg")
-                bl = bl+1
-                success = cv2.imwrite(filename, roi)
 
         # Draw viewport rectangle in blue
         vp_cx, vp_cy = viewport_positions[i]
@@ -189,7 +171,7 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (255, 255, 255),
+            (0, 0, 0),
             2,
             cv2.LINE_AA,
         )

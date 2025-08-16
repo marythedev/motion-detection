@@ -6,8 +6,6 @@ __pycache__/
 # images for model training
 human/
 ball/
-playerpreds
-ballpreds
 
 # C extensions
 *.so
