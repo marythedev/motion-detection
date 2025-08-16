@@ -37,11 +37,18 @@ The system consists of several modular components:
 - Maintains a moving window that follows motion.
 - Ensures the viewport stays within bounds.
 
-4. Visualization (visualizer.py)
+4. Human vs Ball Identifier Model (human_vs_ball_model.py & human_vs_ball_model.h5)
+- A trained model (and a script based on which it was trained) that classifies detected objects as either a human (player) or a ball.
+- Takes cropped image regions (ROIs) from motion detection as input.
+- Outputs the predicted class and confidence score used to label and track the ball or players in the video.
+
+6. Visualization (visualizer.py)
 - Draws bounding boxes around motion.
 - Overlays the viewport rectangle.
+- Uses the Human vs Ball Identifier model to classify regions as players or balls.
+- Highlights the ball with a confidence threshold and tracks its trajectory.
 
-5. Main Controller (main.py)
+6. Main Controller (main.py)
 - Manages the process: read args → process frames → detect motion → track viewport → visualize results.
 
 ## Challenges
@@ -49,3 +56,16 @@ The system consists of several modular components:
 
 ## Future Improvements
 - As a possible feature, track people and the ball separately.
+
+## Work division
+Jimmy
+- Extracting frames from video
+- Motion detection (general)
+- Viewport tracking
+- Visualization of results
+
+Maria
+- Detecting the ball and updating its state
+- Ball motion tracking
+- Motion Region of Interest Classification (Ball/Player)
+- Visualization of results
