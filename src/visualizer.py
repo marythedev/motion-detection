@@ -6,6 +6,57 @@ Visualization functions for displaying motion detection and viewport tracking re
 import os
 import cv2
 import numpy as np
+from tensorflow.keras.models import load_model
+
+# loading model that detects players and balls
+model_path = os.path.join(os.path.dirname(__file__), 'human_vs_ball_model.h5')
+model = load_model(model_path)
+
+CLASS_NAMES = 'human', 'ball'
+
+# resising the roi to send to the model while keeping the proportions
+def resize_with_padding(image, target_size=128):
+    h, w = image.shape[:2]
+    aspect = w / h
+
+    if w > h:
+        new_w = target_size
+        new_h = int(target_size / aspect)
+    else:
+        new_h = target_size
+        new_w = int(target_size * aspect)
+
+    resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+
+    # Создаём чёрный холст
+    padded = np.zeros((target_size, target_size, 3), dtype=np.uint8)
+    x = (target_size - new_w) // 2
+    y = (target_size - new_h) // 2
+    padded[y:y+new_h, x:x+new_w] = resized
+
+    return padded
+
+
+# classifies roi as human or ball (returns the label and confidence)
+def predict_object(roi):
+    
+    if roi.size == 0:
+        return 'unknown', 0.0
+
+    # Подготовка изображения
+    img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
+    img = resize_with_padding(img, 128)
+    img = img.astype('float32') / 255.0
+    img = np.expand_dims(img, axis=0)  # (1, 128, 128, 3)
+
+    # Предсказание
+    pred = model.predict(img, verbose=0)
+    class_idx = np.argmax(pred)
+    label = CLASS_NAMES[class_idx]
+    confidence = float(np.max(pred))
+
+    return label, confidence
+
 
 
 def visualize_results(frames, motion_results, viewport_positions, viewport_size, output_dir):
@@ -53,13 +104,75 @@ def visualize_results(frames, motion_results, viewport_positions, viewport_size,
     #    g. Write frames to both video writers
     # 2. Release the video writers when done
 
-    # Example starter code:
+    pl = 0
+    bl = 0
+    ball_trajectory = []
+
     for i, frame in enumerate(frames):
         annotated = frame.copy()
+        
+        best_ball = None
+        best_conf = 0.0
+        best_center = None
 
-        # Draw motion bounding boxes in green
         for (x, y, w, h) in motion_results[i]:
-            cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            
+            roi = frame[y:y+h, x:x+w]
+            if w < 20 or h < 20 or roi.size == 0:
+                continue
+            
+            # drawing the box and labeling roi
+            label, confidence = predict_object(roi)
+            if (label == 'human'):
+                label = 'player'
+            
+
+            
+            if label == 'ball' and confidence > best_conf:
+                best_conf = confidence
+                best_ball = (x, y, w, h)
+                best_center = (x + w // 2, y + h // 2)
+            
+            # ball labling
+            if best_ball and best_conf > 0.5:
+                x, y, w, h = best_ball
+                cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv2.putText(annotated, f"ball {best_conf:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+                os.makedirs("ballpreds", exist_ok=True)
+                filename = os.path.join("ballpreds", f"ball_{pl:04d}_{pl:03d}.jpg")
+                pl += 1
+                cv2.imwrite(filename, frame[y:y+h, x:x+w])
+
+                if best_center:
+                    ball_trajectory.append(best_center)
+            else:
+                # player labling
+                cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv2.putText(annotated, f"{label}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+            # ball tajectory visualization based on current and last appearance
+            for j in range(1, len(ball_trajectory)):
+                pt1 = ball_trajectory[j - 1]
+                pt2 = ball_trajectory[j]
+                if pt1 and pt2:
+                    cv2.line(annotated, pt1, pt2, (0, 0, 255), 2)
+
+            # FOR DEBUG
+            os.makedirs("ballpreds", exist_ok=True)
+            os.makedirs("playerpreds", exist_ok=True)
+            
+            # saving ball predictions
+            if label == 'ball' and confidence > 0.5:
+                filename = os.path.join("ballpreds", f"ball_{pl:04d}_{pl:03d}.jpg")
+                pl = pl+1
+                success = cv2.imwrite(filename, roi)
+
+            # saving human predictions
+            if label == 'player' and confidence > 0.5:
+                filename = os.path.join("playerpreds", f"human_{bl:04d}_{bl:03d}.jpg")
+                bl = bl+1
+                success = cv2.imwrite(filename, roi)
 
         # Draw viewport rectangle in blue
         vp_cx, vp_cy = viewport_positions[i]
