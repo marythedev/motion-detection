@@ -1,61 +1,74 @@
-# Computer Vision Final Project
+# Motion Detection
 
+This project implements a motion detection system for soccer videos, featuring a dynamic viewport that follows detected motion in a video.  
 
-## Video Motion Detection and Viewport Tracking
-This project implements a motion detection system with a moving viewport that follows detected motion in a video.  
+<p align="center">
+  <img height="350" alt="preview" src="https://github.com/user-attachments/assets/8e7f5eef-2eaa-48c5-ac06-0502a5596d36" />
+</p>
 
 How to Run
+--
 
 ### 1. Install Dependencies
+```
 pip install -r requirement.txt
+```
 
 ### 2. Run the Script
+```
 python src/main.py --video path/to/video.mp4 [--output path/to/output.mp4] [--fps 5] [--viewport_size WIDTHxHEIGHT]
+```
 
 | Argument          | Required | Description                                         |
 | ----------------- | -------- | --------------------------------------------------- |
-| `--video`         | Yes        | Path to the input video file                        |
-| `--output`        | No        | Path to save processed output video                 |
-| `--fps`           | No        | Frames per second to sample from video (default: 5) |
-| `--viewport_size` | No        | Dimensions of viewport in pixels (e.g., `640x480`)  |
+| `--video`         | Yes      | Path to the input video file                        |
+| `--output`        | No       | Path to save processed output video                 |
+| `--fps`           | No       | Frames per second to sample from video (default: 5) |
+| `--viewport_size` | No       | Dimensions of viewport in pixels (e.g., `640x480`)  |
 
-Example:   
+Example:
+```
 python src/main.py --video data/sample_video_clip.mp4 --output results/output.mp4 --fps 5 --viewport_size 640x480
+```
 
 ## Approach
 The system consists of several modular components:
 
-1. Frame Extraction (frame_processor.py)
-- Reads video, downsampled to target FPS.
-- Resizes frames for consistent processing.
+1. Frame Extraction (`frame_processor.py`)
+    - Reads video, downsampled to target FPS.
+    - Resizes frames for consistent processing.
 
-2. Motion Detection (motion_detector.py)
-- Uses cv2.createBackgroundSubtractorMOG2 for detecting moving objects.
-- Thresholding + contour detection to locate motion.
+2. Motion Detection (`motion_detector.py`)
+    - Uses cv2.createBackgroundSubtractorMOG2 for detecting moving objects.
+    - Thresholding + contour detection to locate motion.
 
-3. Viewport Tracking (viewport_tracker.py)
-- Maintains a moving window that follows motion.
-- Ensures the viewport stays within bounds.
+3. Viewport Tracking (`viewport_tracker.py`)
+    - Maintains a moving window that follows motion.
+    - Ensures the viewport stays within bounds.
 
-4. Human vs Ball Identifier Model (human_vs_ball_model.py & human_vs_ball_model.h5)
-- A trained model (and a script based on which it was trained) that classifies detected objects as either a human (player) or a ball.
-- Takes cropped image regions (ROIs) from motion detection as input.
-- Outputs the predicted class and confidence score used to label and track the ball or players in the video.
+4. Human vs Ball Identifier Model (`human_vs_ball_model.py` & `human_vs_ball_model.h5`)
+    - A trained model (and a script based on which it was trained) that classifies detected objects as either a human (player) or a ball.
+    - Takes cropped image regions (ROIs) from motion detection as input.
+    - Outputs the predicted class and confidence score used to label and track the ball or players in the video.
 
-6. Visualization (visualizer.py)
-- Draws bounding boxes around motion.
-- Overlays the viewport rectangle.
-- Uses the Human vs Ball Identifier model to classify regions as players or balls.
-- Highlights the ball with a confidence threshold and tracks its trajectory.
+6. Visualization (`visualizer.py`)
+    - Draws bounding boxes around motion.
+    - Overlays the viewport rectangle.
+    - Uses the Human vs Ball Identifier model to classify regions as players or balls.
+    - Highlights the ball with a confidence threshold and tracks its trajectory.
 
-6. Main Controller (main.py)
-- Manages the process: read args → process frames → detect motion → track viewport → visualize results.
+6. Main Controller (`main.py`)
+    - Manages the process: read args → process frames → detect motion → track viewport → visualize results.
 
 ## Challenges
-- Creating the "smoothness" for the movement of the viewport and boundaries.
+Creating the "smoothness" for the movement of the viewport and boundaries. Below is the produced result of the solution for the viewport tracking acting like a field videographer.
+
+<p align="center">
+  <img height="350" alt="viewport tracking preview" src="https://github.com/user-attachments/assets/d9e69f3f-bca4-4385-87a5-b5cc15daa556" />
+</p>
 
 ## Future Improvements
-- As a possible feature, track people separately. In professional soccer matches, there is images of each player. If model is trained on those, it will be also able to identify where each player in team is. 
+As a possible feature, track people separately. In professional soccer matches, there is images of each player. If model is trained on those, it will be also able to identify where each player in team is. 
 
 ## Work division
 Jimmy
